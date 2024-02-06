@@ -7,11 +7,13 @@ __category__ = "web"
 
 class Extention():
     def __init__(self, url='', out=""):
-        self.driver = webdriver.Chrome()
         if url == '':
              raise Exception('URL for screenshot empty')
              return False
+        
+        self.driver = webdriver.Chrome()
         self.url = url
+        
         if out == '':
              random_name = datetime.now()
              random_name = int(random_name.strftime('%Y%m%d%H%M%S'))
@@ -21,6 +23,9 @@ class Extention():
 
     def run(self):
         self.driver.get(self.url)
-        self.screenshot = self.driver.save_screenshot(self.out)
+        if self.driver.save_screenshot(self.out):
+            print('+ Screeshot save in %s' % (self.out))
+        else:
+            raise Exception('Screeshot not save')
         self.driver.quit()
         return self.out
