@@ -6,6 +6,7 @@ from pathlib import Path
 EXT_DIR = 'extentions'
 WEB_JOB_QUEUE = {}
 DEBUG = False
+WEB_PAGE_BUFFER = {}
 
 def register_module(ext_module):
     if ext_module.__category__ == 'web':
@@ -39,10 +40,13 @@ def RunAllWebScans(url = ''):
     if DEBUG: print('+ Web done')
 
 
-def CallWebRequest(host, url='', payload=''):
+def CallWebRequest(host, method='GET', url='', payload='', allow_redirects=False, ignoreCache=False):
 
-    #import requests
-
+    global WEB_PAGE_BUFFER
+    r_url = host + (url or payload)
+    if not ignoreCache and r_url in WEB_PAGE_BUFFER:
+        return WEB_PAGE_BUFFER[r_url]
+    
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     HTTP_HEADERS = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0',
@@ -53,13 +57,14 @@ def CallWebRequest(host, url='', payload=''):
     s = requests.Session()
     # s.proxies = proxy
     s.verify = False
-    req = requests.Request(method='GET', url=host)
+    req = requests.Request(method=method, url=host)
     prep = req.prepare()
     prep.headers = HTTP_HEADERS
-    prep.url = host + (url or payload)
-    prep.allow_redirects = False
+    prep.url = r_url
+    prep.allow_redirects = allow_redirects
     try:
-        r = s.send(prep, allow_redirects=False)
+        r = s.send(prep, allow_redirects=allow_redirects)
+        WEB_PAGE_BUFFER[r_url] = r
         return r
     except Exception as e:
        # if __DEBUG__:
